@@ -34,6 +34,11 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Root route for testing
+app.get('/', (req, res) => {
+  res.json({ message: 'Bible Tracker API is running' });
+});
+
 // Connect to MongoDB
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('Connected to MongoDB'))
