@@ -39,10 +39,44 @@ app.get('/', (req, res) => {
   res.json({ message: 'Bible Tracker API is running' });
 });
 
-// Connect to MongoDB
-mongoose.connect(process.env.MONGODB_URI)
-  .then(() => console.log('Connected to MongoDB'))
-  .catch(err => console.error('MongoDB connection error:', err));
+// Connect to MongoDB with better error handling
+const connectDB = async () => {
+  try {
+    console.log('Attempting to connect to MongoDB...');
+    console.log('MongoDB URI:', process.env.MONGODB_URI ? 'Present' : 'Missing');
+    console.log('JWT Secret:', process.env.JWT_SECRET ? 'Present' : 'Missing');
+    
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('MongoDB Connected Successfully');
+  } catch (err) {
+    console.error('MongoDB connection error:', err);
+    process.exit(1); // Exit with failure
+  }
+};
+
+// Handle unhandled promise rejections
+process.on('unhandledRejection', (err) => {
+  console.error('Unhandled Promise Rejection:', err);
+  process.exit(1);
+});
+
+// Start server only after DB connection
+const startServer = async () => {
+  try {
+    await connectDB();
+    
+    const PORT = process.env.PORT || 5001;
+    app.listen(PORT, () => {
+      console.log(`Server running on port ${PORT}`);
+      console.log('Environment:', process.env.NODE_ENV || 'development');
+    });
+  } catch (err) {
+    console.error('Failed to start server:', err);
+    process.exit(1);
+  }
+};
+
+startServer();
 
 // Login route
 app.post('/api/auth/login', async (req, res) => {
@@ -112,9 +146,4 @@ app.get('/api/debug/users', async (req, res) => {
     console.error('Error fetching users:', error);
     res.status(500).json({ message: 'Server error' });
   }
-});
-
-const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
 }); 
