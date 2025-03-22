@@ -9,6 +9,12 @@ const User = require('./models/User');
 
 const app = express();
 
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  next();
+});
+
 // Middleware
 const allowedOrigins = [
   'http://localhost:3000',
@@ -36,7 +42,12 @@ app.use(express.json());
 
 // Root route for testing
 app.get('/', (req, res) => {
-  res.json({ message: 'Bible Tracker API is running' });
+  console.log('Root route accessed');
+  res.json({ 
+    message: 'Bible Tracker API is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
 });
 
 // Connect to MongoDB with better error handling
@@ -45,6 +56,7 @@ const connectDB = async () => {
     console.log('Attempting to connect to MongoDB...');
     console.log('MongoDB URI:', process.env.MONGODB_URI ? 'Present' : 'Missing');
     console.log('JWT Secret:', process.env.JWT_SECRET ? 'Present' : 'Missing');
+    console.log('PORT:', process.env.PORT || '5001');
     
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB Connected Successfully');
@@ -69,12 +81,22 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log('Environment:', process.env.NODE_ENV || 'development');
+      console.log('Server started at:', new Date().toISOString());
     });
   } catch (err) {
     console.error('Failed to start server:', err);
     process.exit(1);
   }
 };
+
+// Error handling middleware
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    message: 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
 
 startServer();
 
