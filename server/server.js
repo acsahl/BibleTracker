@@ -40,13 +40,26 @@ app.use(cors({
 }));
 app.use(express.json());
 
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ 
+    status: 'ok',
+    timestamp: new Date().toISOString(),
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+  });
+});
+
 // Root route for testing
 app.get('/', (req, res) => {
-  console.log('Root route accessed');
   res.json({ 
     message: 'Bible Tracker API is running',
     timestamp: new Date().toISOString(),
-    environment: process.env.NODE_ENV || 'development'
+    endpoints: {
+      health: '/health',
+      login: '/api/auth/login',
+      user: '/api/auth/user',
+      debug: '/api/debug/users'
+    }
   });
 });
 
@@ -56,7 +69,6 @@ const connectDB = async () => {
     console.log('Attempting to connect to MongoDB...');
     console.log('MongoDB URI:', process.env.MONGODB_URI ? 'Present' : 'Missing');
     console.log('JWT Secret:', process.env.JWT_SECRET ? 'Present' : 'Missing');
-    console.log('PORT:', process.env.PORT || '5001');
     
     await mongoose.connect(process.env.MONGODB_URI);
     console.log('MongoDB Connected Successfully');
@@ -81,7 +93,12 @@ const startServer = async () => {
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`);
       console.log('Environment:', process.env.NODE_ENV || 'development');
-      console.log('Server started at:', new Date().toISOString());
+      console.log('Available endpoints:');
+      console.log('- GET /');
+      console.log('- GET /health');
+      console.log('- POST /api/auth/login');
+      console.log('- GET /api/auth/user');
+      console.log('- GET /api/debug/users');
     });
   } catch (err) {
     console.error('Failed to start server:', err);
