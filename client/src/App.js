@@ -45,8 +45,22 @@ function App() {
           <Routes>
             <Route path="/login" element={!isAuthenticated ? <Login /> : <Navigate to="/calendar" />} />
             <Route path="/register" element={!isAuthenticated ? <Register /> : <Navigate to="/calendar" />} />
-            <Route path="/calendar" element={isAuthenticated ? <DevotionalCalendar /> : <Navigate to="/login" />} />
-            <Route path="/devotional/:date" element={isAuthenticated ? <DevotionalPage /> : <Navigate to="/login" />} />
+            <Route 
+              path="/calendar" 
+              element={
+                <ProtectedRoute>
+                  <DevotionalCalendar />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/devotional/:date" 
+              element={
+                <ProtectedRoute>
+                  <DevotionalPage />
+                </ProtectedRoute>
+              } 
+            />
             <Route path="/" element={<Navigate to={isAuthenticated ? "/calendar" : "/login"} />} />
           </Routes>
         </div>
