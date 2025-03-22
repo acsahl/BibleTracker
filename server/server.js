@@ -106,17 +106,6 @@ const startServer = async () => {
   }
 };
 
-// Error handling middleware
-app.use((err, req, res, next) => {
-  console.error('Error:', err);
-  res.status(500).json({ 
-    message: 'Internal Server Error',
-    error: process.env.NODE_ENV === 'development' ? err.message : undefined
-  });
-});
-
-startServer();
-
 // Login route
 app.post('/api/auth/login', async (req, res) => {
   try {
@@ -185,4 +174,15 @@ app.get('/api/debug/users', async (req, res) => {
     console.error('Error fetching users:', error);
     res.status(500).json({ message: 'Server error' });
   }
-}); 
+});
+
+// Error handling middleware (moved to the end)
+app.use((err, req, res, next) => {
+  console.error('Error:', err);
+  res.status(500).json({ 
+    message: 'Internal Server Error',
+    error: process.env.NODE_ENV === 'development' ? err.message : undefined
+  });
+});
+
+startServer(); 
