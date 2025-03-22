@@ -26,7 +26,7 @@ jobs:
       - name: Build
         run: |
           cd client
-          CI=false npm run build
+          CI=false REACT_APP_API_URL=https://bible-tracker-api.onrender.com npm run build
 
       - name: Deploy
         uses: JamesIves/github-pages-deploy-action@v4
