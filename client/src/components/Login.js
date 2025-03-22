@@ -27,7 +27,7 @@ const Login = () => {
 
     try {
       console.log('Attempting login with:', formData.email);
-      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/users/login`, formData);
+      const response = await axios.post(`${process.env.REACT_APP_API_URL}/api/auth/login`, formData);
       
       if (response.data.token) {
         console.log('Login successful, storing token');
