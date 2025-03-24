@@ -6,6 +6,7 @@ const jwt = require('jsonwebtoken');
 require('dotenv').config();
 
 const User = require('./models/User');
+const devotionalRoutes = require('./routes/devotionals');
 
 const app = express();
 
@@ -25,7 +26,6 @@ const allowedOrigins = [
 
 app.use(cors({
   origin: function(origin, callback) {
-    // Allow requests with no origin (like mobile apps or curl requests)
     if (!origin) return callback(null, true);
     
     if (allowedOrigins.indexOf(origin) === -1) {
@@ -175,6 +175,9 @@ app.get('/api/debug/users', async (req, res) => {
     res.status(500).json({ message: 'Server error' });
   }
 });
+
+// Routes
+app.use('/api/devotionals', devotionalRoutes);
 
 // Error handling middleware (moved to the end)
 app.use((err, req, res, next) => {
