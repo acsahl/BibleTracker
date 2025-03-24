@@ -28,17 +28,23 @@ const allowedOrigins = [
 
 // Basic CORS middleware
 app.use((req, res, next) => {
-  res.setHeader('Access-Control-Allow-Origin', '*');
+  const origin = req.headers.origin;
+  if (allowedOrigins.includes(origin)) {
+    res.setHeader('Access-Control-Allow-Origin', origin);
+  }
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+  res.setHeader('Access-Control-Allow-Credentials', 'true');
   next();
 });
 
 app.use(cors({
-  origin: '*',
+  origin: allowedOrigins,
+  credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 }));
+
 app.use(express.json());
 
 // Health check endpoint
@@ -46,7 +52,8 @@ app.get('/health', (req, res) => {
   res.json({ 
     status: 'ok',
     timestamp: new Date().toISOString(),
-    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected'
+    mongodb: mongoose.connection.readyState === 1 ? 'connected' : 'disconnected',
+    environment: process.env.NODE_ENV
   });
 });
 
@@ -55,6 +62,7 @@ app.get('/', (req, res) => {
   res.json({ 
     message: 'Bible Tracker API is running',
     timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV,
     endpoints: {
       health: '/health',
       login: '/api/auth/login',
