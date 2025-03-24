@@ -12,4 +12,24 @@ module.exports = {
       },
     },
   },
+  eslint: {
+    enable: true,
+    mode: 'file',
+    configure: {
+      rules: {
+        'react-hooks/exhaustive-deps': 'warn',
+        'no-unused-vars': 'warn'
+      }
+    }
+  },
+  babel: {
+    presets: [
+      [
+        '@babel/preset-react',
+        {
+          runtime: 'automatic'
+        }
+      ]
+    ]
+  }
 }; 
