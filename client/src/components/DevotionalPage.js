@@ -18,12 +18,12 @@ const DevotionalPage = () => {
 
   useEffect(() => {
     fetchDevotional();
-  }, [date]);
+  }, [date, fetchDevotional]);
 
   const fetchDevotional = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5001/api/devotionals`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/devotionals`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
@@ -45,7 +45,7 @@ const DevotionalPage = () => {
           reference: 'John 3:16'
         };
         const createResponse = await axios.post(
-          'http://localhost:5001/api/devotionals',
+          `${process.env.REACT_APP_API_URL}/api/devotionals`,
           newDevotional,
           { headers: { Authorization: `Bearer ${token}` } }
         );
