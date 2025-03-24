@@ -155,7 +155,7 @@ const DevotionalCalendar = () => {
             <div className="space-y-3">
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mr-3"></div>
-                <span className="text-gray-300">Devotional Available</span>
+                <span className="text-gray-300">Today's Devotional</span>
               </div>
               <div className="flex items-center">
                 <div className="w-4 h-4 bg-gray-700 rounded-full mr-3"></div>
