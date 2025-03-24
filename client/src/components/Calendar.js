@@ -9,11 +9,10 @@ import BiblePassage from './BiblePassage';
 
 const DevotionalCalendar = () => {
   const navigate = useNavigate();
-  const [date, setDate] = useState(new Date());
   const [devotionals, setDevotionals] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(new Date());
 
   useEffect(() => {
     fetchDevotionals();
@@ -22,7 +21,7 @@ const DevotionalCalendar = () => {
   const fetchDevotionals = async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`http://localhost:5001/api/devotionals`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/devotionals`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       setDevotionals(response.data);
@@ -97,7 +96,7 @@ const DevotionalCalendar = () => {
         >
           <Calendar
             onChange={handleDateClick}
-            value={date}
+            value={selectedDate}
             className="mx-auto rounded-lg border-none !w-full"
             tileClassName={({ date }) => {
               const devotionalForDate = devotionals.find(
