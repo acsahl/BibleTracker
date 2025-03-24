@@ -6,7 +6,7 @@
       "use": "@vercel/static-build",
       "config": {
         "distDir": "build",
-        "buildCommand": "npm run build"
+        "buildCommand": "npm install && npm run build"
       }
     }
   ],
@@ -32,7 +32,7 @@
     }
   ],
   "env": {
-    "REACT_APP_API_URL": "https://bibletracker.onrender.com",
+    "REACT_APP_API_URL": "https://bibletracker-api.onrender.com",
     "REACT_APP_BIBLE_API_KEY": "51bb59eaabca411a7ebaa8dade03f655"
   }
 } 
