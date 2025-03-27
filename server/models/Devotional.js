@@ -3,8 +3,7 @@ const mongoose = require('mongoose');
 const devotionalSchema = new mongoose.Schema({
   date: {
     type: Date,
-    required: true,
-    unique: true
+    required: true
   },
   title: {
     type: String,
@@ -19,6 +18,10 @@ const devotionalSchema = new mongoose.Schema({
     required: true,
     description: "Bible reference (e.g., 'John 3:16')"
   },
+  userNotes: {
+    type: String,
+    default: ''
+  },
   completed: {
     type: Boolean,
     default: false
@@ -31,5 +34,8 @@ const devotionalSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
+
+// Remove unique constraint from date since we want multiple devotionals per date
+devotionalSchema.index({ date: 1, userId: 1 }, { unique: true });
 
 module.exports = mongoose.model('Devotional', devotionalSchema); 

@@ -35,10 +35,11 @@ const DevotionalPage = () => {
         // Create new devotional for the selected date
         const newDevotional = {
           date: new Date(date),
-          content: `Devotional for ${new Date(date).toLocaleDateString()}`,
-          userNotes: '',
+          title: `Devotional for ${new Date(date).toLocaleDateString()}`,
+          content: 'Start your devotional journey...',
+          reference: 'John 3:16',
           completed: false,
-          reference: 'John 3:16'
+          userId: req.userId
         };
         const createResponse = await axios.post(
           `${process.env.REACT_APP_API_URL}/api/devotionals`,
@@ -74,8 +75,10 @@ const DevotionalPage = () => {
       console.log('Notes to save:', userNotes);
 
       const response = await axios.put(
-        `http://localhost:5001/api/devotionals/${devotional._id}`,
+        `${process.env.REACT_APP_API_URL}/api/devotionals/${devotional._id}`,
         {
+          title: devotional.title,
+          content: devotional.content,
           userNotes,
           completed: true,
           reference
