@@ -52,7 +52,12 @@ const DevotionalCalendar = () => {
   }
 
   const selectedDevotional = selectedDate ? devotionals.find(
-    d => new Date(d.date).toDateString() === selectedDate.toDateString()
+    d => {
+      const devotionalDate = new Date(d.date);
+      return devotionalDate.getFullYear() === selectedDate.getFullYear() &&
+             devotionalDate.getMonth() === selectedDate.getMonth() &&
+             devotionalDate.getDate() === selectedDate.getDate();
+    }
   ) : null;
 
   return (
@@ -105,7 +110,12 @@ const DevotionalCalendar = () => {
             className="mx-auto rounded-lg border-none !w-full"
             tileClassName={({ date }) => {
               const devotionalForDate = devotionals.find(
-                d => new Date(d.date).toDateString() === date.toDateString()
+                d => {
+                  const devotionalDate = new Date(d.date);
+                  return devotionalDate.getFullYear() === date.getFullYear() &&
+                         devotionalDate.getMonth() === date.getMonth() &&
+                         devotionalDate.getDate() === date.getDate();
+                }
               );
               return devotionalForDate 
                 ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200 rounded-full' 
@@ -113,7 +123,12 @@ const DevotionalCalendar = () => {
             }}
             tileContent={({ date }) => {
               const devotionalForDate = devotionals.find(
-                d => new Date(d.date).toDateString() === date.toDateString()
+                d => {
+                  const devotionalDate = new Date(d.date);
+                  return devotionalDate.getFullYear() === date.getFullYear() &&
+                         devotionalDate.getMonth() === date.getMonth() &&
+                         devotionalDate.getDate() === date.getDate();
+                }
               );
               return devotionalForDate && devotionalForDate.completed ? (
                 <div className="flex items-center justify-center">
