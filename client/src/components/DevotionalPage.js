@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { ChevronLeftIcon, PencilIcon, CheckIcon } from '@heroicons/react/24/solid';
@@ -16,11 +16,7 @@ const DevotionalPage = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [showSuccess, setShowSuccess] = useState(false);
 
-  useEffect(() => {
-    fetchDevotional();
-  }, [date, fetchDevotional]);
-
-  const fetchDevotional = async () => {
+  const fetchDevotional = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/devotionals`, {
@@ -59,7 +55,11 @@ const DevotionalPage = () => {
     } finally {
       setLoading(false);
     }
-  };
+  }, [date]);
+
+  useEffect(() => {
+    fetchDevotional();
+  }, [fetchDevotional]);
 
   const handleSaveNotes = async () => {
     if (!devotional?._id) {

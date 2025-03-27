@@ -19,11 +19,7 @@ app.use((req, res, next) => {
 // Middleware
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://localhost:3003',
-  'https://acsahl.github.io',
-  'https://acsahl.github.io/BibleTracker',
-  'https://bibletracker-api.onrender.com',
-  'http://bibletracker-api.onrender.com'
+  'http://localhost:3003'
 ];
 
 // Basic CORS middleware
