@@ -23,13 +23,15 @@ const DevotionalPage = () => {
         headers: { Authorization: `Bearer ${token}` }
       });
       
+      // Parse the date parameter and set it to midnight in local timezone
+      const targetDate = new Date(date);
+      targetDate.setHours(0, 0, 0, 0);
+      
       const devotionalForDate = response.data.find(
         d => {
           const devotionalDate = new Date(d.date);
-          const targetDate = new Date(date);
-          return devotionalDate.getFullYear() === targetDate.getFullYear() &&
-                 devotionalDate.getMonth() === targetDate.getMonth() &&
-                 devotionalDate.getDate() === targetDate.getDate();
+          devotionalDate.setHours(0, 0, 0, 0);
+          return devotionalDate.getTime() === targetDate.getTime();
         }
       );
 
@@ -40,8 +42,8 @@ const DevotionalPage = () => {
       } else {
         // Create new devotional for the selected date
         const newDevotional = {
-          date: new Date(date),
-          title: `Devotional for ${new Date(date).toLocaleDateString()}`,
+          date: targetDate,
+          title: `Devotional for ${targetDate.toLocaleDateString()}`,
           content: 'Start your devotional journey...',
           reference: 'John 3:16',
           completed: false
