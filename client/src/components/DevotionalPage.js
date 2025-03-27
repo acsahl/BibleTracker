@@ -42,7 +42,7 @@ const DevotionalPage = () => {
       } else {
         // Create new devotional for the selected date
         const newDevotional = {
-          date: targetDate,
+          date: targetDate.toISOString(),
           title: `Devotional for ${targetDate.toLocaleDateString()}`,
           content: 'Start your devotional journey...',
           reference: 'John 3:16',
