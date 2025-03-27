@@ -35,7 +35,12 @@ const DevotionalCalendar = () => {
 
   const handleDateClick = (newDate) => {
     setSelectedDate(newDate);
-    navigate(`/devotional/${newDate.toISOString().split('T')[0]}`);
+    // Adjust the date to avoid timezone issues
+    const year = newDate.getFullYear();
+    const month = String(newDate.getMonth() + 1).padStart(2, '0');
+    const day = String(newDate.getDate()).padStart(2, '0');
+    const formattedDate = `${year}-${month}-${day}`;
+    navigate(`/devotional/${formattedDate}`);
   };
 
   if (loading) {

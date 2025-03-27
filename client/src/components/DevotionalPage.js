@@ -24,7 +24,13 @@ const DevotionalPage = () => {
       });
       
       const devotionalForDate = response.data.find(
-        d => new Date(d.date).toISOString().split('T')[0] === date
+        d => {
+          const devotionalDate = new Date(d.date);
+          const targetDate = new Date(date);
+          return devotionalDate.getFullYear() === targetDate.getFullYear() &&
+                 devotionalDate.getMonth() === targetDate.getMonth() &&
+                 devotionalDate.getDate() === targetDate.getDate();
+        }
       );
 
       if (devotionalForDate) {
