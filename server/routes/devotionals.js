@@ -34,10 +34,10 @@ router.get('/', verifyToken, async (req, res) => {
 // Get a specific devotional by date
 router.get('/:date', verifyToken, async (req, res) => {
   try {
-    // Parse the date string and create a UTC date
+    // Parse the date string and create a date object
     const [year, month, day] = req.params.date.split('-').map(Number);
-    const startOfDay = new Date(Date.UTC(year, month - 1, day));
-    const endOfDay = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
+    const startOfDay = new Date(year, month - 1, day);
+    const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
 
     const devotional = await Devotional.findOne({
       userId: req.userId,
@@ -63,12 +63,12 @@ router.post('/', verifyToken, async (req, res) => {
   try {
     const { date, title, content, reference } = req.body;
     
-    // Parse the date string and create a UTC date
-    const [year, month, day] = new Date(date).toISOString().split('T')[0].split('-').map(Number);
-    const utcDate = new Date(Date.UTC(year, month - 1, day));
+    // Parse the date string and create a date object
+    const [year, month, day] = date.split('-').map(Number);
+    const devotionalDate = new Date(year, month - 1, day);
     
     const devotional = new Devotional({
-      date: utcDate,
+      date: devotionalDate,
       title,
       content,
       reference,
