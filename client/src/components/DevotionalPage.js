@@ -38,8 +38,7 @@ const DevotionalPage = () => {
           title: `Devotional for ${new Date(date).toLocaleDateString()}`,
           content: 'Start your devotional journey...',
           reference: 'John 3:16',
-          completed: false,
-          userId: req.userId
+          completed: false
         };
         const createResponse = await axios.post(
           `${process.env.REACT_APP_API_URL}/api/devotionals`,

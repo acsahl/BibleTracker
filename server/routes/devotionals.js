@@ -63,7 +63,8 @@ router.post('/', verifyToken, async (req, res) => {
       title,
       content,
       reference,
-      userId: req.userId
+      userId: req.userId,
+      completed: false
     });
 
     await devotional.save();
