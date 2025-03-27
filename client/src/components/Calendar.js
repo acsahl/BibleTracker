@@ -34,16 +34,22 @@ const DevotionalCalendar = () => {
   };
 
   const handleDateClick = (newDate) => {
-    const localDate = new Date(newDate);
-    localDate.setHours(0, 0, 0, 0); // normalize to midnight
-    setSelectedDate(localDate);
-  
-    const year = localDate.getFullYear();
-    const month = String(localDate.getMonth() + 1).padStart(2, '0');
-    const day = String(localDate.getDate()).padStart(2, '0');
+    // Convert to UTC to avoid timezone issues
+    const utcDate = new Date(Date.UTC(
+      newDate.getFullYear(),
+      newDate.getMonth(),
+      newDate.getDate()
+    ));
+    
+    const year = utcDate.getUTCFullYear();
+    const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(utcDate.getUTCDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`;
+    
+    setSelectedDate(newDate);
     navigate(`/devotional/${formattedDate}`);
   };
+  
 
   if (loading) {
     return (
