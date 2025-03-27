@@ -34,16 +34,9 @@ const DevotionalCalendar = () => {
   };
 
   const handleDateClick = (newDate) => {
-    // Convert to UTC to avoid timezone issues
-    const utcDate = new Date(Date.UTC(
-      newDate.getFullYear(),
-      newDate.getMonth(),
-      newDate.getDate()
-    ));
-    
-    const year = utcDate.getUTCFullYear();
-    const month = String(utcDate.getUTCMonth() + 1).padStart(2, '0');
-    const day = String(utcDate.getUTCDate()).padStart(2, '0');
+    const year = newDate.getFullYear();
+    const month = String(newDate.getMonth() + 1).padStart(2, '0');
+    const day = String(newDate.getDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`;
     
     setSelectedDate(newDate);
