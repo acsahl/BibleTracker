@@ -65,7 +65,8 @@ router.post('/', verifyToken, async (req, res) => {
     
     // Parse the date string and create a date object
     const [year, month, day] = date.split('-').map(Number);
-    const devotionalDate = new Date(Date.UTC(year, month - 1, day));
+    const devotionalDate = new Date(year, month - 1, day);
+    devotionalDate.setHours(0, 0, 0, 0);
 
     
     const devotional = new Devotional({
