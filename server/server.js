@@ -19,7 +19,8 @@ app.use((req, res, next) => {
 // Middleware
 const allowedOrigins = [
   'http://localhost:3000',
-  'http://localhost:3003'
+  'http://localhost:3003',
+  'https://saiv-biblestudy.netlify.app'
 ];
 
 // Basic CORS middleware
