@@ -19,51 +19,58 @@ const DevotionalPage = () => {
   const fetchDevotional = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/devotionals`, {
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/devotionals/${date}`, {
         headers: { Authorization: `Bearer ${token}` }
       });
       
-      // Parse the date parameter and set it to midnight in local timezone
-      const targetDate = new Date(date);
-      targetDate.setHours(0, 0, 0, 0);
-      
-      const devotionalForDate = response.data.find(
-        d => {
-          const devotionalDate = new Date(d.date);
-          devotionalDate.setHours(0, 0, 0, 0);
-          return devotionalDate.getTime() === targetDate.getTime();
-        }
-      );
-
-      if (devotionalForDate) {
-        setDevotional(devotionalForDate);
-        setUserNotes(devotionalForDate.userNotes || '');
-        setReference(devotionalForDate.reference || '');
-      } else {
-        // Create new devotional for the selected date
-        const newDevotional = {
-          date: date, // Use the date string directly from the URL
-          title: `Devotional for ${targetDate.toLocaleDateString()}`,
-          content: 'Start your devotional journey...',
-          reference: 'John 3:16',
-          completed: false
-        };
-        const createResponse = await axios.post(
-          `${process.env.REACT_APP_API_URL}/api/devotionals`,
-          newDevotional,
-          { headers: { Authorization: `Bearer ${token}` } }
-        );
-        setDevotional(createResponse.data);
-        setUserNotes('');
-        setReference('John 3:16');
+      if (response.data) {
+        setDevotional(response.data);
+        setUserNotes(response.data.userNotes || '');
+        setReference(response.data.reference || '');
       }
     } catch (error) {
       console.error('Error fetching devotional:', error);
-      setError('Failed to load devotional');
+      if (error.response?.status === 404) {
+        // Devotional doesn't exist, show the create button
+        setDevotional(null);
+      } else {
+        setError('Failed to load devotional');
+      }
     } finally {
       setLoading(false);
     }
   }, [date]);
+
+  const createNewDevotional = async () => {
+    try {
+      setLoading(true);
+      const token = localStorage.getItem('token');
+      const newDevotional = {
+        date: date,
+        title: `Devotional for ${new Date(date).toLocaleDateString()}`,
+        content: 'Start your devotional journey...',
+        reference: 'John 3:16',
+        completed: false
+      };
+      
+      console.log('Creating new devotional:', newDevotional);
+      const createResponse = await axios.post(
+        `${process.env.REACT_APP_API_URL}/api/devotionals`,
+        newDevotional,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      
+      console.log('Created devotional:', createResponse.data);
+      setDevotional(createResponse.data);
+      setUserNotes('');
+      setReference('John 3:16');
+    } catch (error) {
+      console.error('Error creating devotional:', error);
+      setError('Failed to create devotional');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     fetchDevotional();
@@ -79,16 +86,22 @@ const DevotionalPage = () => {
       setError('');
       const token = localStorage.getItem('token');
       console.log('Saving notes for devotional:', devotional._id);
-      console.log('Notes to save:', userNotes);
+      console.log('🔼 Sending to backend:', {
+        title: devotional.title,
+        content: devotional.content,
+        userNotes: userNotes,
+        completed: true,
+        reference: reference
+      });
 
       const response = await axios.put(
         `${process.env.REACT_APP_API_URL}/api/devotionals/${devotional._id}`,
         {
           title: devotional.title,
           content: devotional.content,
-          userNotes,
+          userNotes: userNotes,
           completed: true,
-          reference
+          reference: reference
         },
         { 
           headers: { 
@@ -98,8 +111,8 @@ const DevotionalPage = () => {
         }
       );
 
-      console.log('Save response:', response.data);
-      setDevotional(response.data);
+      console.log('✅ Save response:', response.data);      setDevotional(response.data);
+      setUserNotes(response.data.userNotes || '');
       setIsEditing(false);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
@@ -154,7 +167,7 @@ const DevotionalPage = () => {
           >
             <p className="text-gray-300 mb-4">No devotional exists for this date.</p>
             <button
-              onClick={fetchDevotional}
+              onClick={createNewDevotional}
               className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg transition-colors duration-200"
             >
               Create New Devotional
