@@ -22,8 +22,11 @@ const verifyToken = (req, res, next) => {
 // Get all devotionals for a user
 router.get('/', verifyToken, async (req, res) => {
   try {
+    console.log('Fetching devotionals for user:', req.userId);
     const devotionals = await Devotional.find({ userId: req.userId })
       .sort({ date: -1 });
+    console.log('Found devotionals:', devotionals.length);
+    console.log('Devotionals:', JSON.stringify(devotionals, null, 2));
     res.json(devotionals);
   } catch (error) {
     console.error('Error fetching devotionals:', error);
