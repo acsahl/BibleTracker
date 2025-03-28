@@ -34,12 +34,16 @@ const DevotionalCalendar = () => {
   };
 
   const handleDateClick = (newDate) => {
-    const year = newDate.getFullYear();
-    const month = String(newDate.getMonth() + 1).padStart(2, '0');
-    const day = String(newDate.getDate()).padStart(2, '0');
+    // Create a new date object to avoid timezone issues
+    const date = new Date(newDate);
+    date.setHours(0, 0, 0, 0);
+    
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`;
     
-    setSelectedDate(newDate);
+    setSelectedDate(date);
     navigate(`/devotional/${formattedDate}`);
   };
   
