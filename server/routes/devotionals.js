@@ -108,26 +108,46 @@ router.post('/', verifyToken, async (req, res) => {
 // Update a devotional
 router.put('/:id', verifyToken, async (req, res) => {
   try {
+    console.log('Updating devotional with ID:', req.params.id);
+    console.log('User ID:', req.userId);
+    console.log('Request body:', req.body);
+
     const devotional = await Devotional.findOne({
       _id: req.params.id,
       userId: req.userId
     });
 
     if (!devotional) {
+      console.log('Devotional not found');
       return res.status(404).json({ message: 'Devotional not found' });
     }
 
-    const { title, content, reference, completed } = req.body;
+    console.log('Found devotional:', devotional);
+
+    const { title, content, reference, completed, userNotes } = req.body;
     devotional.title = title || devotional.title;
     devotional.content = content || devotional.content;
     devotional.reference = reference || devotional.reference;
     devotional.completed = completed !== undefined ? completed : devotional.completed;
+    devotional.userNotes = userNotes !== undefined ? userNotes : devotional.userNotes;
 
-    await devotional.save();
-    res.json(devotional);
+    console.log('Updated devotional before save:', devotional);
+
+    const savedDevotional = await devotional.save();
+    console.log('Saved devotional:', savedDevotional);
+
+    res.json(savedDevotional);
   } catch (error) {
     console.error('Error updating devotional:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ 
+      message: 'Server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
