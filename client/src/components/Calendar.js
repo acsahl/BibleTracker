@@ -12,17 +12,9 @@ const DevotionalCalendar = () => {
   const [devotionals, setDevotionals] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const [selectedDate, setSelectedDate] = useState(new Date());
-
-  useEffect(() => {
-    fetchDevotionals();
-  }, []);
-
-  const isSameDay = (a, b) => {
-    const dateA = new Date(a);
-    const dateB = new Date(b);
-    return dateA.toISOString().slice(0, 10) === dateB.toISOString().slice(0, 10);
-  };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  const [selectedDate, setSelectedDate] = useState(today);
 
   const fetchDevotionals = async () => {
     try {
@@ -37,6 +29,29 @@ const DevotionalCalendar = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  // Fetch devotionals when component mounts
+  useEffect(() => {
+    fetchDevotionals();
+  }, []);
+
+  // Refresh devotionals when returning to calendar
+  useEffect(() => {
+    const handleFocus = () => {
+      fetchDevotionals();
+    };
+
+    window.addEventListener('focus', handleFocus);
+    return () => window.removeEventListener('focus', handleFocus);
+  }, []);
+
+  const isSameDay = (a, b) => {
+    const dateA = new Date(a);
+    const dateB = new Date(b);
+    dateA.setHours(0, 0, 0, 0);
+    dateB.setHours(0, 0, 0, 0);
+    return dateA.getTime() === dateB.getTime();
   };
 
   const handleDateClick = (newDate) => {
