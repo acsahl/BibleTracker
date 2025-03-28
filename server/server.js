@@ -19,7 +19,8 @@ app.use((req, res, next) => {
 const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3003',
-  'https://saiv-biblestudy.netlify.app'
+  'https://saiv-biblestudy.netlify.app',
+  'https://bibletracker-1.onrender.com'
 ];
 
 const corsOptions = {
@@ -27,6 +28,7 @@ const corsOptions = {
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
+      console.log('CORS blocked for origin:', origin);
       callback(new Error('Not allowed by CORS'));
     }
   },
