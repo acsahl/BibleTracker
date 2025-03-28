@@ -35,7 +35,7 @@ const devotionalSchema = new mongoose.Schema({
   timestamps: true
 });
 
-// Remove unique constraint from date since we want multiple devotionals per date
-devotionalSchema.index({ date: 1, userId: 1 }, { unique: true });
+// Create a regular index for date and userId without uniqueness constraint
+devotionalSchema.index({ date: 1, userId: 1 });
 
 module.exports = mongoose.model('Devotional', devotionalSchema); 
