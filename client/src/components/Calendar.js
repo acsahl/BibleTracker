@@ -18,6 +18,12 @@ const DevotionalCalendar = () => {
     fetchDevotionals();
   }, []);
 
+  const isSameDay = (a, b) => {
+    const dateA = new Date(a);
+    const dateB = new Date(b);
+    return dateA.toISOString().slice(0, 10) === dateB.toISOString().slice(0, 10);
+  };
+
   const fetchDevotionals = async () => {
     try {
       const token = localStorage.getItem('token');
@@ -34,16 +40,13 @@ const DevotionalCalendar = () => {
   };
 
   const handleDateClick = (newDate) => {
-    // Get the date components directly from the newDate object
+    setSelectedDate(newDate);
     const year = newDate.getFullYear();
     const month = String(newDate.getMonth() + 1).padStart(2, '0');
     const day = String(newDate.getDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`;
-    
-    setSelectedDate(newDate);
     navigate(`/devotional/${formattedDate}`);
   };
-  
 
   if (loading) {
     return (
@@ -54,13 +57,7 @@ const DevotionalCalendar = () => {
   }
 
   const selectedDevotional = selectedDate ? devotionals.find(
-    d => {
-      const devotionalDate = new Date(d.date);
-      devotionalDate.setHours(0, 0, 0, 0);
-      const selectedDateMidnight = new Date(selectedDate);
-      selectedDateMidnight.setHours(0, 0, 0, 0);
-      return devotionalDate.getTime() === selectedDateMidnight.getTime();
-    }
+    d => isSameDay(d.date, selectedDate)
   ) : null;
 
   return (
@@ -112,29 +109,13 @@ const DevotionalCalendar = () => {
             value={selectedDate}
             className="mx-auto rounded-lg border-none !w-full"
             tileClassName={({ date }) => {
-              const devotionalForDate = devotionals.find(
-                d => {
-                  const devotionalDate = new Date(d.date);
-                  devotionalDate.setHours(0, 0, 0, 0);
-                  const tileDate = new Date(date);
-                  tileDate.setHours(0, 0, 0, 0);
-                  return devotionalDate.getTime() === tileDate.getTime();
-                }
-              );
+              const devotionalForDate = devotionals.find(d => isSameDay(d.date, date));
               return devotionalForDate 
                 ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200 rounded-full' 
                 : 'hover:bg-gray-700 transition-all duration-200 rounded-full text-gray-200';
             }}
             tileContent={({ date }) => {
-              const devotionalForDate = devotionals.find(
-                d => {
-                  const devotionalDate = new Date(d.date);
-                  devotionalDate.setHours(0, 0, 0, 0);
-                  const tileDate = new Date(date);
-                  tileDate.setHours(0, 0, 0, 0);
-                  return devotionalDate.getTime() === tileDate.getTime();
-                }
-              );
+              const devotionalForDate = devotionals.find(d => isSameDay(d.date, date));
               return devotionalForDate && devotionalForDate.completed ? (
                 <div className="flex items-center justify-center">
                   <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -162,70 +143,9 @@ const DevotionalCalendar = () => {
             )}
           />
         </motion.div>
-
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="bg-gray-900 rounded-xl shadow-lg p-6"
-          >
-            <h2 className="text-xl font-semibold text-white mb-4">Legend</h2>
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mr-3"></div>
-                <span className="text-gray-300">Today's Devotional</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-gray-700 rounded-full mr-3"></div>
-                <span className="text-gray-300">No Devotional</span>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
-                <span className="text-gray-300">Completed</span>
-              </div>
-            </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-            className="bg-gray-900 rounded-xl shadow-lg p-6"
-          >
-            <h2 className="text-xl font-semibold text-white mb-4">Quick Tips</h2>
-            <ul className="space-y-2 text-gray-300">
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Click on any blue date to view or add a devotional
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                A checkmark indicates completed devotionals
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Use the arrows to navigate between months
-              </li>
-            </ul>
-          </motion.div>
-        </motion.div>
       </motion.div>
     </motion.div>
   );
 };
 
-export default DevotionalCalendar; 
+export default DevotionalCalendar;
