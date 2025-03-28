@@ -59,9 +59,10 @@ const DevotionalCalendar = () => {
   const selectedDevotional = selectedDate ? devotionals.find(
     d => {
       const devotionalDate = new Date(d.date);
-      return devotionalDate.getFullYear() === selectedDate.getFullYear() &&
-             devotionalDate.getMonth() === selectedDate.getMonth() &&
-             devotionalDate.getDate() === selectedDate.getDate();
+      devotionalDate.setHours(0, 0, 0, 0);
+      const selectedDateMidnight = new Date(selectedDate);
+      selectedDateMidnight.setHours(0, 0, 0, 0);
+      return devotionalDate.getTime() === selectedDateMidnight.getTime();
     }
   ) : null;
 
@@ -117,9 +118,10 @@ const DevotionalCalendar = () => {
               const devotionalForDate = devotionals.find(
                 d => {
                   const devotionalDate = new Date(d.date);
-                  return devotionalDate.getFullYear() === date.getFullYear() &&
-                         devotionalDate.getMonth() === date.getMonth() &&
-                         devotionalDate.getDate() === date.getDate();
+                  devotionalDate.setHours(0, 0, 0, 0);
+                  const tileDate = new Date(date);
+                  tileDate.setHours(0, 0, 0, 0);
+                  return devotionalDate.getTime() === tileDate.getTime();
                 }
               );
               return devotionalForDate 
@@ -130,9 +132,10 @@ const DevotionalCalendar = () => {
               const devotionalForDate = devotionals.find(
                 d => {
                   const devotionalDate = new Date(d.date);
-                  return devotionalDate.getFullYear() === date.getFullYear() &&
-                         devotionalDate.getMonth() === date.getMonth() &&
-                         devotionalDate.getDate() === date.getDate();
+                  devotionalDate.setHours(0, 0, 0, 0);
+                  const tileDate = new Date(date);
+                  tileDate.setHours(0, 0, 0, 0);
+                  return devotionalDate.getTime() === tileDate.getTime();
                 }
               );
               return devotionalForDate && devotionalForDate.completed ? (
