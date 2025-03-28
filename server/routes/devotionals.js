@@ -23,14 +23,30 @@ const verifyToken = (req, res, next) => {
 router.get('/', verifyToken, async (req, res) => {
   try {
     console.log('Fetching devotionals for user:', req.userId);
+    console.log('Token received:', req.headers.authorization);
+    
     const devotionals = await Devotional.find({ userId: req.userId })
       .sort({ date: -1 });
+    
     console.log('Found devotionals:', devotionals.length);
     console.log('Devotionals:', JSON.stringify(devotionals, null, 2));
+    
+    if (devotionals.length === 0) {
+      console.log('No devotionals found for user:', req.userId);
+    }
+    
     res.json(devotionals);
   } catch (error) {
     console.error('Error fetching devotionals:', error);
-    res.status(500).json({ message: 'Server error' });
+    console.error('Error details:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
+    res.status(500).json({ 
+      message: 'Server error',
+      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+    });
   }
 });
 
