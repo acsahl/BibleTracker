@@ -5,6 +5,7 @@ import Register from './components/Register';
 import DevotionalCalendar from './components/Calendar';
 import DevotionalPage from './components/DevotionalPage';
 import Navbar from './components/Navbar';
+import Leaderboard from './components/Leaderboard';
 
 // Protected Route component
 const ProtectedRoute = ({ children }) => {
@@ -58,6 +59,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <DevotionalPage />
+                </ProtectedRoute>
+              } 
+            />
+            <Route 
+              path="/leaderboard" 
+              element={
+                <ProtectedRoute>
+                  <Leaderboard />
                 </ProtectedRoute>
               } 
             />
