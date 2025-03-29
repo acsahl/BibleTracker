@@ -45,9 +45,11 @@ const DevotionalPage = () => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
+      const [year, month, day] = date.split('-');
+
       const newDevotional = {
         date: date,
-        title: `Devotional for ${new Date(date).toLocaleDateString()}`,
+        title: `Devotional for ${Number(month)}/${Number(day)}/${year}`,
         content: 'Start your devotional journey...',
         reference: 'John 3:16',
         completed: false
@@ -106,19 +108,38 @@ const DevotionalPage = () => {
         { 
           headers: { 
             Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          } 
+            'Content-Type': 'application/json',
+            'Accept': 'application/json'
+          },
+          timeout: 10000, // 10 second timeout
+          withCredentials: true
         }
       );
 
-      console.log('✅ Save response:', response.data);      setDevotional(response.data);
+      console.log('✅ Save response:', response.data);
+      
+      if (!response.data) {
+        throw new Error('No data received from server');
+      }
+
+      // Update local state with the response data
+      setDevotional(response.data);
       setUserNotes(response.data.userNotes || '');
+      setReference(response.data.reference || '');
       setIsEditing(false);
       setShowSuccess(true);
       setTimeout(() => setShowSuccess(false), 3000);
     } catch (error) {
       console.error('Error saving notes:', error);
-      setError(error.response?.data?.message || 'Failed to save notes');
+      console.error('Error details:', error.response?.data || error.message);
+      
+      if (error.code === 'ERR_NETWORK') {
+        setError('Network error. Please check your connection and try again.');
+      } else if (error.response?.status === 502) {
+        setError('Server is temporarily unavailable. Please try again in a few moments.');
+      } else {
+        setError(error.response?.data?.message || error.message || 'Failed to save notes');
+      }
     }
   };
 
@@ -129,6 +150,7 @@ const DevotionalPage = () => {
       </div>
     );
   }
+  const [year, month, day] = date.split('-');
 
   return (
     <div className="max-w-4xl mx-auto p-6 bg-black min-h-screen">
@@ -155,8 +177,8 @@ const DevotionalPage = () => {
           transition={{ duration: 0.5, delay: 0.2 }}
           className="text-3xl font-bold text-white mb-6"
         >
-          Devotional for {new Date(date).toLocaleDateString()}
-        </motion.h1>
+       {`Devotional for ${Number(month)}/${Number(day)}/${year}`}
+  </motion.h1>
 
         {!devotional ? (
           <motion.div

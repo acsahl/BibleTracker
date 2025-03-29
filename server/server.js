@@ -7,14 +7,9 @@ require('dotenv').config();
 
 const User = require('./models/User');
 const devotionalRoutes = require('./routes/devotionals');
+const leaderboardRoutes = require('./routes/leaderboard');
 
 const app = express();
-
-// Add request logging middleware
-app.use((req, res, next) => {
-  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
-  next();
-});
 
 const allowedOrigins = [
   'http://localhost:3000',
@@ -33,12 +28,23 @@ const corsOptions = {
     }
   },
   credentials: true,
-  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept']
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin'],
+  exposedHeaders: ['Content-Range', 'X-Content-Range'],
+  maxAge: 600
 };
 
+// Apply CORS middleware before other middleware
 app.use(cors(corsOptions));
 app.options('*', cors(corsOptions));
+
+// Add request logging middleware
+app.use((req, res, next) => {
+  console.log(`${new Date().toISOString()} - ${req.method} ${req.url}`);
+  console.log('Headers:', req.headers);
+  next();
+});
+
 app.use(express.json());
 // Health check endpoint
 app.get('/health', (req, res) => {
@@ -181,6 +187,7 @@ app.get('/api/debug/users', async (req, res) => {
 
 // Routes
 app.use('/api/devotionals', devotionalRoutes);
+app.use('/api/leaderboard', leaderboardRoutes);
 
 // Error handling middleware (moved to the end)
 app.use((err, req, res, next) => {

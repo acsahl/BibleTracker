@@ -58,6 +58,8 @@ router.get('/:date', verifyToken, async (req, res) => {
     const startOfDay = new Date(year, month - 1, day);
     const endOfDay = new Date(year, month - 1, day, 23, 59, 59, 999);
 
+    console.log('Searching for devotional between:', startOfDay, 'and', endOfDay);
+
     const devotional = await Devotional.findOne({
       userId: req.userId,
       date: {
@@ -67,9 +69,11 @@ router.get('/:date', verifyToken, async (req, res) => {
     });
 
     if (!devotional) {
+      console.log('No devotional found for date:', req.params.date);
       return res.status(404).json({ message: 'Devotional not found' });
     }
 
+    console.log('Found devotional:', devotional);
     res.json(devotional);
   } catch (error) {
     console.error('Error fetching devotional:', error);
@@ -85,8 +89,9 @@ router.post('/', verifyToken, async (req, res) => {
     // Parse the date string and create a date object
     const [year, month, day] = date.split('-').map(Number);
     const devotionalDate = new Date(year, month - 1, day);
-    devotionalDate.setHours(0, 0, 0, 0);
-
+    devotionalDate.setHours(0, 0, 0, 0); // Set to midnight to ensure consistent comparison
+    
+    console.log('Creating devotional for date:', devotionalDate);
     
     const devotional = new Devotional({
       date: devotionalDate,
@@ -98,6 +103,7 @@ router.post('/', verifyToken, async (req, res) => {
     });
 
     await devotional.save();
+    console.log('Created devotional:', devotional);
     res.status(201).json(devotional);
   } catch (error) {
     console.error('Error creating devotional:', error);

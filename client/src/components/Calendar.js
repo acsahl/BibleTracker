@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
 import './Calendar.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import { motion } from 'framer-motion';
 import BiblePassage from './BiblePassage';
 
 const DevotionalCalendar = () => {
@@ -12,46 +11,108 @@ const DevotionalCalendar = () => {
   const [devotionals, setDevotionals] = useState([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(true);
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-  const [selectedDate, setSelectedDate] = useState(today);
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [streak, setStreak] = useState(0);
 
-  const fetchDevotionals = async () => {
+  const toLocalMidnight = (date) => {
+    const d = new Date(date);
+    // Convert to UTC midnight
+    return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate());
+  };
+
+  const calculateStreak = useCallback((entries) => {
+    console.log('Calculating streak for entries:', entries);
+    
+    const completedDates = new Set(
+      entries
+        .filter(d => {
+          const isCompleted = d.completed && d.userNotes?.trim();
+          console.log('Devotional date:', d.date, 'completed:', d.completed, 'has notes:', !!d.userNotes?.trim());
+          return isCompleted;
+        })
+        .map(d => {
+          const utcTime = toLocalMidnight(d.date);
+          console.log('Completed date:', d.date, 'UTC time:', utcTime);
+          return utcTime;
+        })
+    );
+    
+    console.log('Completed dates set:', Array.from(completedDates));
+
+    // Find the most recent completed date
+    const mostRecentDate = Math.max(...Array.from(completedDates));
+    console.log('Most recent completed date:', new Date(mostRecentDate).toISOString());
+
+    let streak = 0;
+    let current = new Date(mostRecentDate);
+    console.log('Starting from most recent date:', current.toISOString());
+
+    // Check previous days
+    for (let i = 0; i < 365; i++) {
+      const time = current.getTime();
+      console.log('Checking date:', current.toISOString(), 'time:', time, 'is in completedDates:', completedDates.has(time));
+      
+      if (completedDates.has(time)) {
+        streak++;
+        console.log('Found completed date, streak:', streak);
+        // Move to previous day in UTC
+        current = new Date(Date.UTC(
+          current.getUTCFullYear(),
+          current.getUTCMonth(),
+          current.getUTCDate() - 1
+        ));
+      } else {
+        console.log('Break streak at:', current.toISOString());
+        break;
+      }
+    }
+    console.log('Final streak:', streak);
+    return streak;
+  }, []);
+
+  const fetchDevotionals = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
       const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/devotionals`, {
         headers: { Authorization: `Bearer ${token}` }
       });
-      setDevotionals(response.data);
+      console.log('Raw devotionals from API:', response.data);
+      
+      // Parse dates and ensure they're in UTC
+      const parsedDevotionals = response.data.map(devotional => ({
+        ...devotional,
+        date: new Date(devotional.date)
+      }));
+      console.log('Parsed devotionals:', parsedDevotionals.map(d => ({
+        date: d.date.toISOString(),
+        completed: d.completed,
+        hasNotes: !!d.userNotes?.trim()
+      })));
+      
+      setDevotionals(parsedDevotionals);
+      const calculatedStreak = calculateStreak(parsedDevotionals);
+      console.log('Setting streak to:', calculatedStreak);
+      setStreak(calculatedStreak);
       setError('');
     } catch (error) {
+      console.error('Error fetching devotionals:', error);
       setError('Failed to load devotionals. Please try refreshing the page.');
     } finally {
       setLoading(false);
     }
-  };
+  }, [calculateStreak]);
 
-  // Fetch devotionals when component mounts
   useEffect(() => {
     fetchDevotionals();
-  }, []);
-
-  // Refresh devotionals when returning to calendar
-  useEffect(() => {
-    const handleFocus = () => {
-      fetchDevotionals();
-    };
-
-    window.addEventListener('focus', handleFocus);
-    return () => window.removeEventListener('focus', handleFocus);
-  }, []);
+  }, [fetchDevotionals]);
 
   const isSameDay = (a, b) => {
     const dateA = new Date(a);
     const dateB = new Date(b);
-    dateA.setHours(0, 0, 0, 0);
-    dateB.setHours(0, 0, 0, 0);
-    return dateA.getTime() === dateB.getTime();
+    // Compare UTC dates
+    return dateA.getUTCFullYear() === dateB.getUTCFullYear() &&
+           dateA.getUTCMonth() === dateB.getUTCMonth() &&
+           dateA.getUTCDate() === dateB.getUTCDate();
   };
 
   const handleDateClick = (newDate) => {
@@ -76,150 +137,72 @@ const DevotionalCalendar = () => {
   ) : null;
 
   return (
-    <motion.div
-      initial={{ y: 100, opacity: 0 }}
-      animate={{ y: 0, opacity: 1 }}
-      transition={{ duration: 0.5, ease: "easeOut" }}
-      className="min-h-screen bg-black"
-    >
-      <motion.div
-        initial={{ y: 50, opacity: 0 }}
-        animate={{ y: 0, opacity: 1 }}
-        transition={{ duration: 0.5, delay: 0.2 }}
-        className="max-w-4xl mx-auto px-4 py-8 bg-black"
-      >
-        <motion.div
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.3 }}
-          className="text-center mb-8"
-        >
-          <h1 className="text-4xl font-bold text-white mb-2">Bible Study Calendar</h1>
-          <p className="text-gray-300">Track your daily devotionals and spiritual journey</p>
-        </motion.div>
+    <div className="min-h-screen bg-black text-white p-6">
+      <div className="text-center mb-6">
+        <h1 className="text-3xl font-bold">Bible Study Calendar</h1>
+        <p className="text-gray-400">Track your daily devotionals and spiritual journey</p>
+        <div className="mt-2 text-blue-400">🔥 Current Streak: {streak} day{streak !== 1 && 's'}</div>
+      </div>
 
-        {error && (
-          <motion.div
-            initial={{ opacity: 0, y: -10 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6"
-            role="alert"
-          >
-            <span className="block sm:inline">{error}</span>
-          </motion.div>
-        )}
+      {error && (
+        <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6 text-center">
+          {error}
+        </div>
+      )}
 
-        {selectedDevotional && selectedDevotional.reference && (
-          <BiblePassage reference={selectedDevotional.reference} />
-        )}
+      {selectedDevotional && selectedDevotional.reference && (
+        <BiblePassage reference={selectedDevotional.reference} />
+      )}
 
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.4 }}
-          className="bg-gray-900 rounded-2xl shadow-xl p-8"
-        >
-          <Calendar
-            onChange={handleDateClick}
-            value={selectedDate}
-            className="mx-auto rounded-lg border-none !w-full"
-            tileClassName={({ date }) => {
-              const devotionalForDate = devotionals.find(d => isSameDay(d.date, date));
-              return devotionalForDate && devotionalForDate.completed && devotionalForDate.userNotes?.trim()
-                ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200 rounded-full' 
-                : 'hover:bg-gray-700 transition-all duration-200 rounded-full text-gray-200';
-            }}
-            tileContent={({ date }) => {
-              const devotionalForDate = devotionals.find(d => isSameDay(d.date, date));
-              return devotionalForDate && devotionalForDate.completed && devotionalForDate.userNotes?.trim() ? (
-                <div className="flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                  </svg>
-                </div>
-              ) : null;
-            }}
-            formatDay={(locale, date) => date.getDate()}
-            minDetail="month"
-            maxDetail="month"
-            showNeighboringMonth={false}
-            showFixedNumberOfWeeks={false}
-            calendarType="gregory"
-            nextLabel={<svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>}
-            prevLabel={<svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>}
-            next2Label={null}
-            prev2Label={null}
-            navigationLabel={({ date }) => (
+      <div className="max-w-4xl mx-auto bg-gray-900 rounded-2xl shadow-xl p-8">
+        <Calendar
+          onChange={handleDateClick}
+          value={selectedDate}
+          className="mx-auto rounded-lg border-none !w-full"
+          tileClassName={({ date }) => {
+            const devotional = devotionals.find(
+              d => isSameDay(d.date, date)
+            );
+          
+            return devotional && devotional.completed && devotional.userNotes?.trim()
+              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200 rounded-full'
+              : 'hover:bg-gray-700 transition-all duration-200 rounded-full text-gray-200';
+          }}
+          
+          tileContent={({ date }) => {
+            const devotional = devotionals.find(
+              d => isSameDay(d.date, date)
+            );
+          
+            return devotional && devotional.completed && devotional.userNotes?.trim() ? (
               <div className="flex items-center justify-center">
-                <span className="text-xl font-semibold text-white">
-                  {date.toLocaleString('default', { month: 'long', year: 'numeric' })}
-                </span>
-              </div>
-            )}
-          />
-        </motion.div>
-        <motion.div
-          initial={{ y: 30, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          transition={{ duration: 0.5, delay: 0.5 }}
-          className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4"
-        >
-          <motion.div
-            initial={{ x: -20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.6 }}
-            className="bg-gray-900 rounded-xl shadow-lg p-6"
-          >
-            <h2 className="text-xl font-semibold text-white mb-4">Legend</h2>
-            <div className="space-y-3">
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full mr-3"></div>
-                <span className="text-gray-300">Completed Devotional</span>
-              </div>
-              <div className="flex items-center">
-                <div className="w-4 h-4 bg-gray-700 rounded-full mr-3"></div>
-                <span className="text-gray-300">No Devotional</span>
-              </div>
-              <div className="flex items-center">
-                <svg className="w-5 h-5 text-blue-500 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
                 </svg>
-                <span className="text-gray-300">Checkmark = Completed</span>
               </div>
+            ) : null;
+          }}
+          
+          formatDay={(locale, date) => date.getDate()}
+          minDetail="month"
+          maxDetail="month"
+          showNeighboringMonth={false}
+          showFixedNumberOfWeeks={false}
+          calendarType="gregory"
+          nextLabel={<svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>}
+          prevLabel={<svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>}
+          next2Label={null}
+          prev2Label={null}
+          navigationLabel={({ date }) => (
+            <div className="flex items-center justify-center">
+              <span className="text-xl font-semibold text-white">
+                {date.toLocaleString('default', { month: 'long', year: 'numeric' })}
+              </span>
             </div>
-          </motion.div>
-
-          <motion.div
-            initial={{ x: 20, opacity: 0 }}
-            animate={{ x: 0, opacity: 1 }}
-            transition={{ duration: 0.5, delay: 0.7 }}
-            className="bg-gray-900 rounded-xl shadow-lg p-6"
-          >
-            <h2 className="text-xl font-semibold text-white mb-4">Quick Tips</h2>
-            <ul className="space-y-3 text-gray-300">
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Click on a date to view or add a devotional.
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                A checkmark appears when notes are saved and completed.
-              </li>
-              <li className="flex items-start">
-                <svg className="w-5 h-5 text-blue-500 mr-2 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-                Navigate between months using the arrows.
-              </li>
-            </ul>
-          </motion.div>
-        </motion.div>
-      </motion.div>
-    </motion.div>
+          )}
+        />
+      </div>
+    </div>
   );
 };
 
