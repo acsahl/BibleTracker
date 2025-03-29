@@ -51,7 +51,7 @@ const DevotionalPage = () => {
         date: date,
         title: `Devotional for ${Number(month)}/${Number(day)}/${year}`,
         content: 'Start your devotional journey...',
-        reference: 'John 3:16',
+        reference: '',  // Let the server set the reference
         completed: false
       };
       
@@ -65,7 +65,7 @@ const DevotionalPage = () => {
       console.log('Created devotional:', createResponse.data);
       setDevotional(createResponse.data);
       setUserNotes('');
-      setReference('John 3:16');
+      setReference(createResponse.data.reference || '');  // Use the reference from the server
     } catch (error) {
       console.error('Error creating devotional:', error);
       setError('Failed to create devotional');

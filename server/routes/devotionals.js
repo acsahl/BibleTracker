@@ -93,11 +93,37 @@ router.post('/', verifyToken, async (req, res) => {
     
     console.log('Creating devotional for date:', devotionalDate);
     
+    // Generate a reference based on the date
+    const books = [
+      'Genesis', 'Exodus', 'Leviticus', 'Numbers', 'Deuteronomy', 'Joshua', 'Judges', 'Ruth',
+      '1 Samuel', '2 Samuel', '1 Kings', '2 Kings', '1 Chronicles', '2 Chronicles', 'Ezra',
+      'Nehemiah', 'Esther', 'Job', 'Psalms', 'Proverbs', 'Ecclesiastes', 'Song of Solomon',
+      'Isaiah', 'Jeremiah', 'Lamentations', 'Ezekiel', 'Daniel', 'Hosea', 'Joel', 'Amos',
+      'Obadiah', 'Jonah', 'Micah', 'Nahum', 'Habakkuk', 'Zephaniah', 'Haggai', 'Zechariah',
+      'Malachi', 'Matthew', 'Mark', 'Luke', 'John', 'Acts', 'Romans', '1 Corinthians',
+      '2 Corinthians', 'Galatians', 'Ephesians', 'Philippians', 'Colossians', '1 Thessalonians',
+      '2 Thessalonians', '1 Timothy', '2 Timothy', 'Titus', 'Philemon', 'Hebrews', 'James',
+      '1 Peter', '2 Peter', '1 John', '2 John', '3 John', 'Jude', 'Revelation'
+    ];
+    
+    // Use the day of the year to select a book (cycling through books)
+    const dayOfYear = Math.floor((devotionalDate - new Date(year, 0, 1)) / (1000 * 60 * 60 * 24));
+    const bookIndex = dayOfYear % books.length;
+    const book = books[bookIndex];
+    
+    // Use the day of the month to select a chapter (1-30)
+    const chapter = (day % 30) + 1;
+    
+    // Use the hour of the day to select a verse (1-24)
+    const verse = (devotionalDate.getHours() % 24) + 1;
+    
+    const generatedReference = `${book} ${chapter}:${verse}`;
+    
     const devotional = new Devotional({
       date: devotionalDate,
       title,
       content,
-      reference,
+      reference: reference || generatedReference, // Use provided reference or generated one
       userId: req.userId,
       completed: false
     });
