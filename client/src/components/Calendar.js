@@ -150,8 +150,10 @@ const DevotionalCalendar = () => {
         </div>
       )}
 
-      {selectedDevotional && selectedDevotional.reference && (
+      {selectedDevotional && selectedDevotional.reference ? (
         <BiblePassage reference={selectedDevotional.reference} />
+      ) : (
+        <BiblePassage reference="John 3:16" />
       )}
 
       <div className="max-w-4xl mx-auto bg-gray-900 rounded-2xl shadow-xl p-8">

@@ -143,6 +143,48 @@ const DevotionalPage = () => {
     }
   };
 
+  // Add new function to handle reference changes
+  const handleReferenceChange = async (newReference) => {
+    setReference(newReference);
+    if (devotional?._id) {
+      try {
+        setError('');
+        const token = localStorage.getItem('token');
+        console.log('Saving reference for devotional:', devotional._id);
+        
+        const response = await axios.put(
+          `${process.env.REACT_APP_API_URL}/api/devotionals/${devotional._id}`,
+          {
+            title: devotional.title,
+            content: devotional.content,
+            userNotes: userNotes,
+            completed: devotional.completed,
+            reference: newReference
+          },
+          { 
+            headers: { 
+              Authorization: `Bearer ${token}`,
+              'Content-Type': 'application/json',
+              'Accept': 'application/json'
+            }
+          }
+        );
+
+        if (!response.data) {
+          throw new Error('No data received from server');
+        }
+
+        // Update local state with the response data
+        setDevotional(response.data);
+        setShowSuccess(true);
+        setTimeout(() => setShowSuccess(false), 3000);
+      } catch (error) {
+        console.error('Error saving reference:', error);
+        setError(error.response?.data?.message || error.message || 'Failed to save reference');
+      }
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-black">
@@ -231,13 +273,17 @@ const DevotionalPage = () => {
               className="mb-8"
             >
               <h2 className="text-xl font-semibold text-white mb-4">Bible Reference</h2>
-              <input
-                type="text"
-                value={reference}
-                onChange={(e) => setReference(e.target.value)}
-                className="w-full p-4 bg-gray-800 border border-gray-700 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-gray-300"
-                placeholder="Enter Bible reference (e.g., John 3:16)"
-              />
+              <div className="flex items-center justify-between">
+                <div className="flex-1">
+                  <input
+                    type="text"
+                    value={reference}
+                    onChange={(e) => handleReferenceChange(e.target.value)}
+                    className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    placeholder="Enter Bible reference"
+                  />
+                </div>
+              </div>
             </motion.div>
 
             {reference && (
