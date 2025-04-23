@@ -6,6 +6,7 @@ const BiblePassage = ({ reference }) => {
   const [passage, setPassage] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const [responseDetails, setResponseDetails] = useState(null);
 
   useEffect(() => {
     const fetchPassage = async () => {
@@ -21,6 +22,18 @@ const BiblePassage = ({ reference }) => {
         const formattedReference = reference.trim().replace(/\s+/g, ' ');
         console.log('Formatted reference:', formattedReference);
 
+        // Format verse numbers to ensure space between chapter and verse
+        const formatVerseNumbers = (text) => {
+          // Add space between chapter and verse numbers
+          return text
+            // Add space between number and text (e.g., "13I" -> "13 I")
+            .replace(/(\d+)([A-Za-z])/g, '$1 $2')
+            // Add space between number and text at the beginning of verses
+            .replace(/^(\d+)([A-Za-z])/gm, '$1 $2')
+            // Add space between number and text after a period
+            .replace(/\.(\d+)([A-Za-z])/g, '. $1 $2');
+        };
+
         // Use the server's API endpoint instead of direct Bible API
         // We'll use a default Bible ID for now
         const bibleId = '9879dbb7cfe39e4d-01';
@@ -33,9 +46,15 @@ const BiblePassage = ({ reference }) => {
           // First try to get the passage directly
           const response = await axios.get(`${apiUrl}/api/bible/passage/${bibleId}/${encodeURIComponent(formattedReference)}`);
           console.log('API Response:', response.data);
+          setResponseDetails(response.data);
           
           if (response.data && response.data.data && response.data.data.passages && response.data.data.passages.length > 0) {
-            setPassage(response.data.data.passages[0]);
+            // Format the passage content to ensure proper spacing
+            const passage = response.data.data.passages[0];
+            if (passage.content) {
+              passage.content = formatVerseNumbers(passage.content);
+            }
+            setPassage(passage);
             setError(null);
           } else {
             // If no passages found, try with a more specific format
@@ -46,17 +65,31 @@ const BiblePassage = ({ reference }) => {
             if (book && chapter) {
               // Try with chapter format (e.g., "Acts 6:1")
               const chapterResponse = await axios.get(`${apiUrl}/api/bible/passage/${bibleId}/${encodeURIComponent(`${book} ${chapter}:1`)}`);
+              console.log('Chapter Response:', chapterResponse.data);
+              setResponseDetails(chapterResponse.data);
               
               if (chapterResponse.data && chapterResponse.data.data && chapterResponse.data.data.passages && chapterResponse.data.data.passages.length > 0) {
-                setPassage(chapterResponse.data.data.passages[0]);
+                // Format the passage content to ensure proper spacing
+                const passage = chapterResponse.data.data.passages[0];
+                if (passage.content) {
+                  passage.content = formatVerseNumbers(passage.content);
+                }
+                setPassage(passage);
                 setError(null);
               } else {
                 // If still no passages found, use default reference
                 console.log('No passages found, using default reference');
                 const defaultResponse = await axios.get(`${apiUrl}/api/bible/passage/${bibleId}/John%203:16`);
+                console.log('Default Response:', defaultResponse.data);
+                setResponseDetails(defaultResponse.data);
                 
                 if (defaultResponse.data && defaultResponse.data.data && defaultResponse.data.data.passages && defaultResponse.data.data.passages.length > 0) {
-                  setPassage(defaultResponse.data.data.passages[0]);
+                  // Format the passage content to ensure proper spacing
+                  const passage = defaultResponse.data.data.passages[0];
+                  if (passage.content) {
+                    passage.content = formatVerseNumbers(passage.content);
+                  }
+                  setPassage(passage);
                   setError(null);
                 } else {
                   throw new Error('No passages found');
@@ -68,7 +101,9 @@ const BiblePassage = ({ reference }) => {
           }
         } catch (err) {
           console.error('Error fetching Bible passage:', err);
-          setError(err.message || 'Failed to fetch Bible passage');
+          console.error('Error response:', err.response?.data);
+          setError(err.response?.data?.error || err.message || 'Failed to fetch Bible passage');
+          setResponseDetails(err.response?.data);
         }
       } catch (err) {
         console.error('Error fetching Bible passage:', err);
@@ -92,10 +127,9 @@ const BiblePassage = ({ reference }) => {
 
   if (error) {
     return (
-      <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg">
-        {error}
-        <div className="mt-2 text-sm">
-          Please check the console for more details.
+      <div className="bg-red-900/30 border border-red-700/50 text-red-200 px-4 py-3 rounded-lg">
+        <div className="font-medium text-red-300">
+          This Bible reference does not exist.
         </div>
       </div>
     );

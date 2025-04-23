@@ -273,42 +273,44 @@ const DevotionalPage = () => {
               className="mb-8"
             >
               <h2 className="text-xl font-semibold text-white mb-4">Bible Reference</h2>
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <input
-                    type="text"
-                    value={reference}
-                    onChange={(e) => handleReferenceChange(e.target.value)}
-                    className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    placeholder="Enter Bible reference"
-                  />
+              <div className="flex flex-col">
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <input
+                      type="text"
+                      value={reference}
+                      onChange={(e) => handleReferenceChange(e.target.value)}
+                      className="w-full bg-gray-800 text-white px-4 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      placeholder="Enter Bible reference (e.g., John 3:16)"
+                    />
+                  </div>
+                </div>
+                <div className="mt-2 text-sm text-gray-400">
+                  <p>Format examples:</p>
+                  <ul className="list-disc list-inside ml-2">
+                    <li>Single verse: John 3:16</li>
+                    <li>Chapter only: Psalm 23</li>
+                    <li>Verse range: 1 Corinthians 13:4-7</li>
+                  </ul>
                 </div>
               </div>
             </motion.div>
 
-            {reference && (
-              <motion.div 
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: 0.4 }}
-                className="mb-8"
-              >
-                <h2 className="text-xl font-semibold text-white mb-4">Today's Bible Reading</h2>
-                <div className="bg-gray-800 rounded-lg p-4">
-                  <BiblePassage reference={reference} />
-                </div>
-              </motion.div>
-            )}
-
             <motion.div 
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.5, delay: 0.5 }}
+              transition={{ duration: 0.5, delay: 0.4 }}
               className="mb-8"
             >
-              <h2 className="text-xl font-semibold text-white mb-4">Today's Reading</h2>
+              <h2 className="text-xl font-semibold text-white mb-4">Today's Bible Reading</h2>
               <div className="bg-gray-800 rounded-lg p-4">
-                <p className="text-gray-300">{devotional?.content}</p>
+                {reference ? (
+                  <BiblePassage reference={reference} />
+                ) : (
+                  <div className="text-gray-400 text-center py-4">
+                    Enter a Bible reference above to see the passage
+                  </div>
+                )}
               </div>
             </motion.div>
 
@@ -320,7 +322,7 @@ const DevotionalPage = () => {
             >
               <div className="flex justify-between items-center mb-4">
                 <h2 className="text-xl font-semibold text-white">Your Notes</h2>
-                {!isEditing && userNotes && (
+                {!isEditing && (
                   <motion.button
                     whileHover={{ scale: 1.05 }}
                     whileTap={{ scale: 0.95 }}
@@ -344,7 +346,7 @@ const DevotionalPage = () => {
                   value={userNotes}
                   onChange={(e) => setUserNotes(e.target.value)}
                   placeholder="Add your thoughts and reflections here..."
-                  disabled={!isEditing && userNotes}
+                  disabled={!isEditing}
                 />
                 <AnimatePresence>
                   {isEditing && (

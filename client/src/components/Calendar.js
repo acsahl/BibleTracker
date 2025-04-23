@@ -5,8 +5,6 @@ import './Calendar.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BiblePassage from './BiblePassage';
-import BibleApiTest from './BibleApiTest';
-import AuthTest from './AuthTest';
 
 const DevotionalCalendar = () => {
   const navigate = useNavigate();
@@ -200,14 +198,6 @@ const DevotionalCalendar = () => {
     <div className="min-h-screen bg-gray-900 text-white p-4">
       <div className="max-w-4xl mx-auto">
         <h1 className="text-3xl font-bold mb-6">Devotional Calendar</h1>
-        
-        <div className="mb-6">
-          <AuthTest />
-        </div>
-        
-        <div className="mb-6">
-          <BibleApiTest />
-        </div>
         
         <div className="mb-6">
           <BiblePassage reference={selectedDate ? getBibleReference(selectedDate) : null} />
