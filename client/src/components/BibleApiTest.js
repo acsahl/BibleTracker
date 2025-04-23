@@ -9,44 +9,22 @@ const BibleApiTest = () => {
   useEffect(() => {
     const testApi = async () => {
       try {
-        const API_KEY = process.env.REACT_APP_BIBLE_API_KEY;
-        console.log('Testing Bible API with key:', API_KEY ? 'Present' : 'Missing');
+        console.log('Testing Bible API through server proxy');
         
-        if (!API_KEY) {
-          throw new Error('API key not found in environment variables');
-        }
+        // Use the server's API endpoint instead of direct Bible API
+        const response = await axios.get('/api/bible/versions');
         
-        // Try a simple request to the Bible API using a different approach
-        // Using a direct fetch with mode: 'cors' and credentials: 'omit'
-        const response = await fetch(
-          'https://api.scripture.api.bible/v1/bibles',
-          {
-            method: 'GET',
-            headers: {
-              'api-key': API_KEY,
-              'Content-Type': 'application/json'
-            },
-            mode: 'cors',
-            credentials: 'omit'
-          }
-        );
-        
-        if (!response.ok) {
-          throw new Error(`API responded with status: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log('Bible API test response:', data);
-        setResult(data);
+        console.log('Bible API test response:', response.data);
+        setResult(response.data);
         setError(null);
       } catch (err) {
         console.error('Bible API test error:', err);
         console.error('Error details:', err.message);
         
-        if (err.message.includes('401')) {
+        if (err.response?.status === 401) {
           setError('API key is invalid or expired');
-        } else if (err.message.includes('403')) {
-          setError('Access denied. This may be due to CORS restrictions or an invalid API key');
+        } else if (err.response?.status === 403) {
+          setError('Access denied. This may be due to server configuration issues');
         } else if (err.message.includes('Network')) {
           setError('Network error. Please check your connection');
         } else {
@@ -85,7 +63,7 @@ const BibleApiTest = () => {
       )}
       
       <div className="mt-4">
-        <p className="text-gray-300">API Key: {process.env.REACT_APP_BIBLE_API_KEY ? 'Present' : 'Missing'}</p>
+        <p className="text-gray-300">Using server proxy for Bible API requests</p>
         <p className="text-gray-300">API URL: {process.env.REACT_APP_API_URL || 'Not set'}</p>
       </div>
     </div>
