@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
 import { motion } from 'framer-motion';
 
 const BiblePassage = ({ reference }) => {
@@ -28,69 +27,99 @@ const BiblePassage = ({ reference }) => {
         console.log('Formatted reference:', formattedReference);
 
         // Try to fetch with the exact reference first
-        let response = await axios.get(
+        let response = await fetch(
           `https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/search?query=${encodeURIComponent(formattedReference)}`,
           {
+            method: 'GET',
             headers: {
               'api-key': API_KEY,
               'Content-Type': 'application/json'
-            }
+            },
+            mode: 'cors',
+            credentials: 'omit'
           }
         );
 
-        console.log('API Response:', response.data);
+        if (!response.ok) {
+          throw new Error(`API responded with status: ${response.status}`);
+        }
+
+        let data = await response.json();
+        console.log('API Response:', data);
 
         // If no passages found, try with a more specific format
-        if (!response.data.data.passages || response.data.data.passages.length === 0) {
+        if (!data.data.passages || data.data.passages.length === 0) {
           console.log('No passages found with exact reference, trying with chapter format');
           
           // Extract book and chapter
           const [book, chapter] = formattedReference.split(' ');
           if (book && chapter) {
             // Try with chapter format (e.g., "Acts 6:1")
-            response = await axios.get(
+            response = await fetch(
               `https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/search?query=${encodeURIComponent(`${book} ${chapter}:1`)}`,
               {
+                method: 'GET',
                 headers: {
                   'api-key': API_KEY,
                   'Content-Type': 'application/json'
-                }
+                },
+                mode: 'cors',
+                credentials: 'omit'
               }
             );
+
+            if (!response.ok) {
+              throw new Error(`API responded with status: ${response.status}`);
+            }
+
+            data = await response.json();
           }
 
           // If still no passages found, use default reference
-          if (!response.data.data.passages || response.data.data.passages.length === 0) {
+          if (!data.data.passages || data.data.passages.length === 0) {
             console.log('No passages found, using default reference');
-            response = await axios.get(
+            response = await fetch(
               `https://api.scripture.api.bible/v1/bibles/9879dbb7cfe39e4d-01/search?query=John 3:16`,
               {
+                method: 'GET',
                 headers: {
                   'api-key': API_KEY,
                   'Content-Type': 'application/json'
-                }
+                },
+                mode: 'cors',
+                credentials: 'omit'
               }
             );
+
+            if (!response.ok) {
+              throw new Error(`API responded with status: ${response.status}`);
+            }
+
+            data = await response.json();
           }
         }
 
-        if (response.data.data.passages && response.data.data.passages.length > 0) {
-          setPassage(response.data.data.passages[0]);
+        if (data.data.passages && data.data.passages.length > 0) {
+          setPassage(data.data.passages[0]);
           setError(null);
         } else {
           throw new Error(`No passages found for reference: ${formattedReference}`);
         }
       } catch (err) {
         console.error('Error fetching Bible passage:', err);
-        console.error('Error details:', err.response?.data || err.message);
+        console.error('Error details:', err.message);
         
         // Set a more user-friendly error message
-        if (err.response?.status === 401) {
+        if (err.message.includes('401')) {
           setError('API key is invalid or expired. Please check your configuration.');
-        } else if (err.response?.status === 404) {
+        } else if (err.message.includes('403')) {
+          setError('Access to the Bible API was denied. This may be due to CORS restrictions or an invalid API key.');
+        } else if (err.message.includes('404')) {
           setError(`No passage found for: ${reference}`);
+        } else if (err.message.includes('Network')) {
+          setError('Network error when connecting to the Bible API. Please check your connection.');
         } else {
-          setError(err.response?.data?.message || err.message || 'Failed to load Bible passage. Please try again.');
+          setError(err.message || 'Failed to load Bible passage. Please try again.');
         }
       } finally {
         setLoading(false);

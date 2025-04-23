@@ -5,6 +5,8 @@ import './Calendar.css';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import BiblePassage from './BiblePassage';
+import BibleApiTest from './BibleApiTest';
+import AuthTest from './AuthTest';
 
 const DevotionalCalendar = () => {
   const navigate = useNavigate();
@@ -13,6 +15,27 @@ const DevotionalCalendar = () => {
   const [loading, setLoading] = useState(true);
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [streak, setStreak] = useState(0);
+
+  const getBibleReference = (date) => {
+    // This is a simple example - you can modify this to return different references
+    // based on your needs or fetch from an API
+    const references = [
+      'John 3:16',
+      'Psalm 23',
+      'Romans 8:28',
+      'Philippians 4:13',
+      'Matthew 6:33',
+      'Proverbs 3:5-6',
+      'Isaiah 40:31',
+      'Jeremiah 29:11',
+      '1 Corinthians 13:4-7',
+      'Galatians 5:22-23'
+    ];
+    
+    // Use the date to deterministically select a reference
+    const index = date.getDate() % references.length;
+    return references[index];
+  };
 
   const toLocalMidnight = (date) => {
     const d = new Date(date);
@@ -73,9 +96,32 @@ const DevotionalCalendar = () => {
   const fetchDevotionals = useCallback(async () => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/devotionals`, {
-        headers: { Authorization: `Bearer ${token}` }
+      
+      // Check if token exists
+      if (!token) {
+        console.error('No authentication token found');
+        setError('Authentication token missing. Please log in again.');
+        setLoading(false);
+        return;
+      }
+      
+      console.log('Using token:', token.substring(0, 10) + '...');
+      
+      // Log the full request details for debugging
+      console.log('Making request to:', `${process.env.REACT_APP_API_URL}/api/devotionals`);
+      console.log('With headers:', { 
+        Authorization: `Bearer ${token.substring(0, 10)}...`,
+        'Content-Type': 'application/json'
       });
+      
+      const response = await axios.get(`${process.env.REACT_APP_API_URL}/api/devotionals`, {
+        headers: { 
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        },
+        timeout: 10000 // 10 second timeout
+      });
+      
       console.log('Raw devotionals from API:', response.data);
       
       // Parse dates and ensure they're in UTC
@@ -96,7 +142,21 @@ const DevotionalCalendar = () => {
       setError('');
     } catch (error) {
       console.error('Error fetching devotionals:', error);
-      setError('Failed to load devotionals. Please try refreshing the page.');
+      console.error('Error response:', error.response);
+      console.error('Error status:', error.response?.status);
+      console.error('Error data:', error.response?.data);
+      
+      if (error.response?.status === 401) {
+        setError('Authentication failed. Please log in again.');
+        // Redirect to login page
+        setTimeout(() => {
+          window.location.href = '/login';
+        }, 2000);
+      } else if (error.code === 'ERR_NETWORK') {
+        setError('Network error. Please check your connection and try again.');
+      } else {
+        setError('Failed to load devotionals. Please try refreshing the page.');
+      }
     } finally {
       setLoading(false);
     }
@@ -104,7 +164,7 @@ const DevotionalCalendar = () => {
 
   useEffect(() => {
     fetchDevotionals();
-  }, [fetchDevotionals]);
+  }, []);
 
   const isSameDay = (a, b) => {
     const dateA = new Date(a);
@@ -115,14 +175,14 @@ const DevotionalCalendar = () => {
            dateA.getUTCDate() === dateB.getUTCDate();
   };
 
-  const handleDateClick = (newDate) => {
+  const handleDateClick = useCallback((newDate) => {
     setSelectedDate(newDate);
     const year = newDate.getFullYear();
     const month = String(newDate.getMonth() + 1).padStart(2, '0');
     const day = String(newDate.getDate()).padStart(2, '0');
     const formattedDate = `${year}-${month}-${day}`;
     navigate(`/devotional/${formattedDate}`);
-  };
+  }, [navigate]);
 
   if (loading) {
     return (
@@ -137,72 +197,82 @@ const DevotionalCalendar = () => {
   ) : null;
 
   return (
-    <div className="min-h-screen bg-black text-white p-6">
-      <div className="text-center mb-6">
-        <h1 className="text-3xl font-bold">Bible Study Calendar</h1>
-        <p className="text-gray-400">Track your daily devotionals and spiritual journey</p>
-        <div className="mt-2 text-blue-400">🔥 Current Streak: {streak} day{streak !== 1 && 's'}</div>
-      </div>
-
-      {error && (
-        <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6 text-center">
-          {error}
+    <div className="min-h-screen bg-gray-900 text-white p-4">
+      <div className="max-w-4xl mx-auto">
+        <h1 className="text-3xl font-bold mb-6">Devotional Calendar</h1>
+        
+        <div className="mb-6">
+          <AuthTest />
         </div>
-      )}
+        
+        <div className="mb-6">
+          <BibleApiTest />
+        </div>
+        
+        <div className="mb-6">
+          <BiblePassage reference={selectedDate ? getBibleReference(selectedDate) : null} />
+        </div>
 
-      {selectedDevotional && selectedDevotional.reference ? (
-        <BiblePassage reference={selectedDevotional.reference} />
-      ) : (
-        <BiblePassage reference="John 3:16" />
-      )}
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-bold">Bible Study Calendar</h1>
+          <p className="text-gray-400">Track your daily devotionals and spiritual journey</p>
+          <div className="mt-2 text-blue-400">🔥 Current Streak: {streak} day{streak !== 1 && 's'}</div>
+        </div>
 
-      <div className="max-w-4xl mx-auto bg-gray-900 rounded-2xl shadow-xl p-8">
-        <Calendar
-          onChange={handleDateClick}
-          value={selectedDate}
-          className="mx-auto rounded-lg border-none !w-full"
-          tileClassName={({ date }) => {
-            const devotional = devotionals.find(
-              d => isSameDay(d.date, date)
-            );
-          
-            return devotional && devotional.completed && devotional.userNotes?.trim()
-              ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200 rounded-full'
-              : 'hover:bg-gray-700 transition-all duration-200 rounded-full text-gray-200';
-          }}
-          
-          tileContent={({ date }) => {
-            const devotional = devotionals.find(
-              d => isSameDay(d.date, date)
-            );
-          
-            return devotional && devotional.completed && devotional.userNotes?.trim() ? (
+        {error && (
+          <div className="bg-red-900/50 border border-red-700 text-red-200 px-4 py-3 rounded-lg mb-6 text-center">
+            {error}
+          </div>
+        )}
+
+        <div className="max-w-4xl mx-auto bg-gray-900 rounded-2xl shadow-xl p-8">
+          <Calendar
+            onChange={handleDateClick}
+            value={selectedDate}
+            className="mx-auto rounded-lg border-none !w-full"
+            tileClassName={({ date }) => {
+              const devotional = devotionals.find(
+                d => isSameDay(d.date, date)
+              );
+            
+              return devotional && devotional.completed && devotional.userNotes?.trim()
+                ? 'bg-gradient-to-br from-blue-500 to-blue-600 text-white hover:from-blue-600 hover:to-blue-700 transition-all duration-200 rounded-full'
+                : 'hover:bg-gray-700 transition-all duration-200 rounded-full text-gray-200';
+            }}
+            
+            tileContent={({ date }) => {
+              const devotional = devotionals.find(
+                d => isSameDay(d.date, date)
+              );
+            
+              return devotional && devotional.completed && devotional.userNotes?.trim() ? (
+                <div className="flex items-center justify-center">
+                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+                  </svg>
+                </div>
+              ) : null;
+            }}
+            
+            formatDay={(locale, date) => date.getDate()}
+            minDetail="month"
+            maxDetail="month"
+            showNeighboringMonth={false}
+            showFixedNumberOfWeeks={false}
+            calendarType="gregory"
+            nextLabel={<svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>}
+            prevLabel={<svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>}
+            next2Label={null}
+            prev2Label={null}
+            navigationLabel={({ date }) => (
               <div className="flex items-center justify-center">
-                <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
-                </svg>
+                <span className="text-xl font-semibold text-white">
+                  {date.toLocaleString('default', { month: 'long', year: 'numeric' })}
+                </span>
               </div>
-            ) : null;
-          }}
-          
-          formatDay={(locale, date) => date.getDate()}
-          minDetail="month"
-          maxDetail="month"
-          showNeighboringMonth={false}
-          showFixedNumberOfWeeks={false}
-          calendarType="gregory"
-          nextLabel={<svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" /></svg>}
-          prevLabel={<svg className="w-6 h-6 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M15 19l-7-7 7-7" /></svg>}
-          next2Label={null}
-          prev2Label={null}
-          navigationLabel={({ date }) => (
-            <div className="flex items-center justify-center">
-              <span className="text-xl font-semibold text-white">
-                {date.toLocaleString('default', { month: 'long', year: 'numeric' })}
-              </span>
-            </div>
-          )}
-        />
+            )}
+          />
+        </div>
       </div>
     </div>
   );

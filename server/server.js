@@ -3,11 +3,13 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const axios = require('axios');
 require('dotenv').config();
 
 const User = require('./models/User');
 const devotionalRoutes = require('./routes/devotionals');
 const leaderboardRoutes = require('./routes/leaderboard');
+const bibleRoutes = require('./routes/bible');
 
 const app = express();
 
@@ -15,11 +17,13 @@ const allowedOrigins = [
   'http://localhost:3000',
   'http://localhost:3003',
   'https://saiv-biblestudy.netlify.app',
-  'https://bibletracker-1.onrender.com'
+  'https://bibletracker-1.onrender.com',
+  'http://bibletracker-1.onrender.com'
 ];
 
 const corsOptions = {
   origin: function (origin, callback) {
+    console.log('Incoming request from origin:', origin);
     if (!origin || allowedOrigins.includes(origin)) {
       callback(null, true);
     } else {
@@ -232,6 +236,7 @@ app.get('/api/debug/users', async (req, res) => {
 // Routes
 app.use('/api/devotionals', devotionalRoutes);
 app.use('/api/leaderboard', leaderboardRoutes);
+app.use('/api/bible', bibleRoutes);
 
 // Error handling middleware (moved to the end)
 app.use((err, req, res, next) => {
