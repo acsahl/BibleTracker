@@ -74,14 +74,59 @@ router.get('/passage/:bibleId/:passageId', async (req, res) => {
     const { bibleId, passageId } = req.params;
     console.log(`Fetching passage ${passageId} from Bible ${bibleId}`);
     
-    const response = await axios.get(`${BIBLE_API_BASE_URL}/bibles/${bibleId}/passages/${passageId}`, {
+    // The Bible API expects a specific format for passage IDs
+    // Let's try to search for the passage instead of using the passage ID directly
+    const searchResponse = await axios.get(`${BIBLE_API_BASE_URL}/bibles/${bibleId}/search`, {
+      params: {
+        query: passageId
+      },
       headers: {
         'api-key': process.env.BIBLE_API_KEY
       }
     });
     
-    console.log('Bible passage response status:', response.status);
-    res.json(response.data);
+    console.log('Bible search response status:', searchResponse.status);
+    
+    if (searchResponse.data && searchResponse.data.data && searchResponse.data.data.passages && searchResponse.data.data.passages.length > 0) {
+      // If we found passages, return the first one
+      res.json({
+        data: {
+          passages: [searchResponse.data.data.passages[0]]
+        }
+      });
+    } else {
+      // If no passages found, try to get the chapter
+      console.log('No passages found, trying to get chapter');
+      
+      // Extract book and chapter from the passage ID (e.g., "John 3:16" -> "John 3")
+      const [book, chapter] = passageId.split(' ');
+      if (book && chapter) {
+        // Try to get the book ID first
+        const booksResponse = await axios.get(`${BIBLE_API_BASE_URL}/bibles/${bibleId}/books`, {
+          headers: {
+            'api-key': process.env.BIBLE_API_KEY
+          }
+        });
+        
+        // Find the book ID by name
+        const bookData = booksResponse.data.data.find(b => b.name.toLowerCase() === book.toLowerCase());
+        if (bookData) {
+          // Get the chapter
+          const chapterResponse = await axios.get(`${BIBLE_API_BASE_URL}/bibles/${bibleId}/books/${bookData.id}/chapters/${chapter}`, {
+            headers: {
+              'api-key': process.env.BIBLE_API_KEY
+            }
+          });
+          
+          console.log('Bible chapter response status:', chapterResponse.status);
+          res.json(chapterResponse.data);
+        } else {
+          throw new Error(`Book not found: ${book}`);
+        }
+      } else {
+        throw new Error(`Invalid passage format: ${passageId}`);
+      }
+    }
   } catch (error) {
     console.error('Error fetching Bible passage:', error.message);
     if (error.response) {
