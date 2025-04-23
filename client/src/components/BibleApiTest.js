@@ -5,6 +5,7 @@ const BibleApiTest = () => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [responseDetails, setResponseDetails] = useState(null);
 
   useEffect(() => {
     const testApi = async () => {
@@ -16,10 +17,24 @@ const BibleApiTest = () => {
         
         console.log('Bible API test response:', response.data);
         setResult(response.data);
+        setResponseDetails({
+          status: response.status,
+          statusText: response.statusText,
+          headers: response.headers,
+          data: response.data
+        });
         setError(null);
       } catch (err) {
         console.error('Bible API test error:', err);
         console.error('Error details:', err.message);
+        
+        if (err.response) {
+          setResponseDetails({
+            status: err.response.status,
+            statusText: err.response.statusText,
+            data: err.response.data
+          });
+        }
         
         if (err.response?.status === 401) {
           setError('API key is invalid or expired');
@@ -59,6 +74,15 @@ const BibleApiTest = () => {
         <div className="bg-green-900/50 border border-green-700 text-green-200 px-4 py-3 rounded-lg mb-4">
           <p className="font-bold">Success!</p>
           <p>API connection successful. Found {result.data?.length || 0} Bibles.</p>
+        </div>
+      )}
+      
+      {responseDetails && (
+        <div className="bg-gray-800 border border-gray-700 text-gray-300 px-4 py-3 rounded-lg mb-4 overflow-auto max-h-60">
+          <p className="font-bold mb-2">Response Details:</p>
+          <pre className="text-xs">
+            {JSON.stringify(responseDetails, null, 2)}
+          </pre>
         </div>
       )}
       
