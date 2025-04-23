@@ -12,8 +12,12 @@ const BibleApiTest = () => {
       try {
         console.log('Testing Bible API through server proxy');
         
+        // Use the full API URL instead of a relative path
+        const apiUrl = process.env.REACT_APP_API_URL || 'https://bibletracker-1.onrender.com';
+        console.log('Using API URL:', apiUrl);
+        
         // Use the server's API endpoint instead of direct Bible API
-        const response = await axios.get('/api/bible/versions');
+        const response = await axios.get(`${apiUrl}/api/bible/versions`);
         
         console.log('Bible API test response:', response.data);
         setResult(response.data);
@@ -88,7 +92,7 @@ const BibleApiTest = () => {
       
       <div className="mt-4">
         <p className="text-gray-300">Using server proxy for Bible API requests</p>
-        <p className="text-gray-300">API URL: {process.env.REACT_APP_API_URL || 'Not set'}</p>
+        <p className="text-gray-300">API URL: {process.env.REACT_APP_API_URL || 'https://bibletracker-1.onrender.com'}</p>
       </div>
     </div>
   );

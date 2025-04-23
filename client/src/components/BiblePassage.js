@@ -25,9 +25,13 @@ const BiblePassage = ({ reference }) => {
         // We'll use a default Bible ID for now
         const bibleId = '9879dbb7cfe39e4d-01';
         
+        // Use the full API URL instead of a relative path
+        const apiUrl = process.env.REACT_APP_API_URL || 'https://bibletracker-1.onrender.com';
+        console.log('Using API URL:', apiUrl);
+        
         try {
           // First try to get the passage directly
-          const response = await axios.get(`/api/bible/passage/${bibleId}/${encodeURIComponent(formattedReference)}`);
+          const response = await axios.get(`${apiUrl}/api/bible/passage/${bibleId}/${encodeURIComponent(formattedReference)}`);
           console.log('API Response:', response.data);
           
           if (response.data && response.data.data && response.data.data.passages && response.data.data.passages.length > 0) {
@@ -41,7 +45,7 @@ const BiblePassage = ({ reference }) => {
             const [book, chapter] = formattedReference.split(' ');
             if (book && chapter) {
               // Try with chapter format (e.g., "Acts 6:1")
-              const chapterResponse = await axios.get(`/api/bible/passage/${bibleId}/${encodeURIComponent(`${book} ${chapter}:1`)}`);
+              const chapterResponse = await axios.get(`${apiUrl}/api/bible/passage/${bibleId}/${encodeURIComponent(`${book} ${chapter}:1`)}`);
               
               if (chapterResponse.data && chapterResponse.data.data && chapterResponse.data.data.passages && chapterResponse.data.data.passages.length > 0) {
                 setPassage(chapterResponse.data.data.passages[0]);
@@ -49,7 +53,7 @@ const BiblePassage = ({ reference }) => {
               } else {
                 // If still no passages found, use default reference
                 console.log('No passages found, using default reference');
-                const defaultResponse = await axios.get(`/api/bible/passage/${bibleId}/John%203:16`);
+                const defaultResponse = await axios.get(`${apiUrl}/api/bible/passage/${bibleId}/John%203:16`);
                 
                 if (defaultResponse.data && defaultResponse.data.data && defaultResponse.data.data.passages && defaultResponse.data.data.passages.length > 0) {
                   setPassage(defaultResponse.data.data.passages[0]);
